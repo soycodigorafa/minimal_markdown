@@ -1,16 +1,17 @@
 # markdown_editor
 
-A new Flutter project.
+Bored of all the js based markdown editors out there I decided to build my own.
+A markdown editor app built with Flutter.
 
-## Getting Started
+## What Can You Do?
 
-This project is a starting point for a Flutter application.
+- Open and edit markdown files
+- Save your work
+- Preview your markdown
+- Switch between editor and preview modes
 
-A few resources to get you started if this is your first Flutter project:
+## How to Use
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Download the latest release from the [releases page](https://github.com/soycodigorafa/markdown_editor/releases).
