@@ -6,8 +6,19 @@ on:
   pull_request:
     branches: [ master ]
 
+# Define reusable workflow to avoid duplication
 jobs:
+  setup-flutter:
+    name: Setup Flutter
+    runs-on: ubuntu-latest
+    outputs:
+      flutter-version: ${{ steps.get-flutter-version.outputs.version }}
+    steps:
+      - id: get-flutter-version
+        run: echo "version=$(curl -s https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json | jq -r '.releases[] | select(.channel == "stable") | .version' | head -n 1)" >> $GITHUB_OUTPUT
+
   build-macos:
+    needs: setup-flutter
     runs-on: macos-latest
     
     steps:
@@ -16,7 +27,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: ${{ needs.setup-flutter.outputs.flutter-version }}
           channel: 'stable'
       
       - name: Install dependencies
@@ -32,6 +43,7 @@ jobs:
           path: build/macos/Build/Products/Release/markdown_editor.app
   
   build-windows:
+    needs: setup-flutter
     runs-on: windows-latest
     
     steps:
@@ -40,7 +52,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: ${{ needs.setup-flutter.outputs.flutter-version }}
           channel: 'stable'
       
       - name: Install dependencies
@@ -59,6 +71,7 @@ jobs:
           path: build/windows/runner/Release
   
   build-linux:
+    needs: setup-flutter
     runs-on: ubuntu-latest
     
     steps:
@@ -72,7 +85,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: ${{ needs.setup-flutter.outputs.flutter-version }}
           channel: 'stable'
       
       - name: Install dependencies
