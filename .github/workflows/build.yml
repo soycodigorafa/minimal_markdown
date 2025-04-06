@@ -36,11 +36,15 @@ jobs:
       - name: Build macOS app
         run: flutter build macos --release
       
+      - name: List build directory contents
+        run: find build/macos -type d -name "*.app"
+      
       - name: Archive macOS build
         uses: actions/upload-artifact@v4
         with:
           name: macos-build
           path: build/macos/Build/Products/Release/markdown_editor.app
+          if-no-files-found: warn
   
   build-windows:
     needs: setup-flutter
@@ -64,11 +68,16 @@ jobs:
       - name: Build Windows app
         run: flutter build windows --release
       
+      - name: List build directory contents
+        run: dir build\windows\x64\Release /s
+        shell: cmd
+      
       - name: Archive Windows build
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: build/windows/runner/Release
+          path: build/windows/x64/Release
+          if-no-files-found: warn
   
   build-linux:
     needs: setup-flutter
@@ -97,8 +106,12 @@ jobs:
       - name: Build Linux app
         run: flutter build linux --release
       
+      - name: List build directory contents
+        run: find build/linux -type d
+      
       - name: Archive Linux build
         uses: actions/upload-artifact@v4
         with:
           name: linux-build
           path: build/linux/x64/release/bundle
+          if-no-files-found: warn
