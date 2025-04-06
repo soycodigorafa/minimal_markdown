@@ -15,6 +15,7 @@ void main() async {
   // Configure window size and title
   WindowOptions windowOptions = const WindowOptions(
     size: Size(1000, 800),
+    minimumSize: Size(600, 600),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
@@ -26,7 +27,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
   });
-  
+
   // Ejecutar la aplicación con Riverpod como proveedor de estado
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -38,7 +39,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Acceder a las configuraciones de tema utilizando Riverpod
     final themeSettings = ref.watch(themeNotifierProvider);
-    
+
     return MaterialApp(
       title: 'Markdown Editor',
       debugShowCheckedModeBanner: false,
@@ -62,9 +63,7 @@ class MyApp extends ConsumerWidget {
       ),
       themeMode: themeSettings.themeMode,
       home: const EditorScreen(),
-      routes: {
-        '/settings': (context) => const SettingsScreen(),
-      },
+      routes: {'/settings': (context) => const SettingsScreen()},
     );
   }
 }

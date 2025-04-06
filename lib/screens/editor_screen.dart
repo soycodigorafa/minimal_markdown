@@ -7,7 +7,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown_editor/viewmodels/document_viewmodel.dart';
 import 'package:markdown_editor/services/file_service.dart';
 import 'package:markdown_editor/services/theme_service.dart';
+import 'package:markdown_editor/widgets/snippet_palette.dart';
 import 'package:window_manager/window_manager.dart';
+
+// Enumeración para los modos de visualización
+enum ViewMode { editor, preview, split }
+
+// Proveedor para el modo de visualización
+final viewModeProvider = StateNotifierProvider<ViewModeNotifier, ViewMode>(
+  (ref) => ViewModeNotifier(),
+);
+
+class ViewModeNotifier extends StateNotifier<ViewMode> {
+  ViewModeNotifier() : super(ViewMode.editor);
+
+  void setMode(ViewMode mode) => state = mode;
+  
+  void togglePreview() {
+    if (state == ViewMode.editor) {
+      state = ViewMode.preview;
+    } else {
+      state = ViewMode.editor;
+    }
+  }
+  
+  void toggleSplit() {
+    if (state == ViewMode.split) {
+      state = ViewMode.editor;
+    } else {
+      state = ViewMode.split;
+    }
+  }
+}
 
 class EditorScreen extends ConsumerStatefulWidget {
   const EditorScreen({super.key});
@@ -40,35 +71,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
         }
       });
 
-      // Configurar el focus node para manejar eventos de teclado
+      // Ya no necesitamos manejar el evento de Enter para insertar backslashes
+      // porque Markdown ahora renderiza correctamente con solo saltos de línea
       _editorFocusNode.onKeyEvent = (node, event) {
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.enter) {
-          // Obtener la posición actual del cursor
-          final cursorPosition = _textController.selection.baseOffset;
-          if (cursorPosition >= 0) {
-            // Obtener el texto actual
-            final text = _textController.text;
-            // Encontrar el final de la línea actual
-            int lineEnd = text.indexOf('\n', cursorPosition);
-            if (lineEnd == -1) lineEnd = text.length;
-
-            // Insertar '\' al final de la línea actual y luego un salto de línea
-            final beforeCursor = text.substring(0, lineEnd);
-            final afterCursor = text.substring(lineEnd);
-
-            // Actualizar el texto con el '\' al final de la línea
-            final newText = '$beforeCursor \\\n$afterCursor';
-            _textController.value = TextEditingValue(
-              text: newText,
-              selection: TextSelection.collapsed(
-                offset: lineEnd + 3,
-              ), // +3 por ' \' + '\n'
-            );
-
-            return KeyEventResult.handled;
-          }
-        }
+        // Mantener el focus node para otros eventos de teclado que podríamos querer manejar en el futuro
         return KeyEventResult.ignored;
       };
     });
@@ -193,7 +199,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   @override
   Widget build(BuildContext context) {
     final document = ref.watch(documentProvider);
-    final isPreviewMode = ref.watch(previewModeProvider);
+    final viewMode = ref.watch(viewModeProvider);
     final fontSize = ref.watch(editorFontSizeProvider);
 
     // Definir los atajos de teclado
@@ -259,7 +265,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               // Alternar vista previa (Ctrl+P)
               else if (event.logicalKey == LogicalKeyboardKey.keyP &&
                   isCtrlPressed) {
-                ref.read(previewModeProvider.notifier).toggle();
+                ref.read(viewModeProvider.notifier).togglePreview();
+                return KeyEventResult.handled;
+              }
+              // Alternar vista dividida (Ctrl+D)
+              else if (event.logicalKey == LogicalKeyboardKey.keyD &&
+                  isCtrlPressed) {
+                ref.read(viewModeProvider.notifier).toggleSplit();
                 return KeyEventResult.handled;
               }
             }
@@ -287,10 +299,14 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                   onPressed: _newDocument,
                 ),
                 IconButton(
-                  icon: Icon(isPreviewMode ? Icons.edit : Icons.preview),
+                  icon: Icon(viewMode == ViewMode.preview ? Icons.edit : Icons.preview),
                   tooltip: 'Cambiar modo (Ctrl+P)',
-                  onPressed:
-                      () => ref.read(previewModeProvider.notifier).toggle(),
+                  onPressed: () => ref.read(viewModeProvider.notifier).togglePreview(),
+                ),
+                IconButton(
+                  icon: Icon(viewMode == ViewMode.split ? Icons.fullscreen : Icons.splitscreen),
+                  tooltip: 'Vista dividida (Ctrl+D)',
+                  onPressed: () => ref.read(viewModeProvider.notifier).toggleSplit(),
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings),
@@ -299,10 +315,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                 ),
               ],
             ),
-            body:
-                isPreviewMode
-                    ? _buildPreviewMode(document.content, fontSize)
-                    : _buildEditorMode(fontSize),
+            body: () {
+              switch (viewMode) {
+                case ViewMode.editor:
+                  return _buildEditorMode(fontSize);
+                case ViewMode.preview:
+                  return _buildPreviewMode(document.content, fontSize);
+                case ViewMode.split:
+                  return _buildSplitMode(document.content, fontSize);
+              }
+            }(),
           ),
         ),
       ),
@@ -310,21 +332,45 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   }
 
   Widget _buildEditorMode(double fontSize) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: TextField(
-        controller: _textController,
-        focusNode: _editorFocusNode,
-        maxLines: null,
-        expands: true,
-        style: TextStyle(fontSize: fontSize, fontFamily: 'monospace'),
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          hintText: 'Escribe tu markdown aquí...',
+    return Column(
+      children: [
+        // Snippet palette
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1.0,
+              ),
+            ),
+          ),
+          child: SnippetPalette(
+            textController: _textController,
+            focusNode: _editorFocusNode,
+          ),
         ),
-        keyboardType: TextInputType.multiline,
-        textInputAction: TextInputAction.newline,
-      ),
+        // Editor
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _textController,
+              focusNode: _editorFocusNode,
+              maxLines: null,
+              expands: true,
+              style: TextStyle(fontSize: fontSize, fontFamily: 'monospace'),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Escribe tu markdown aquí...',
+              ),
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -334,6 +380,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       child: Markdown(
         data: content,
         selectable: true,
+        softLineBreak: true, // Render single line breaks as <br>
         styleSheet: MarkdownStyleSheet(
           p: TextStyle(fontSize: fontSize),
           h1: TextStyle(fontSize: fontSize * 2.0),
@@ -344,6 +391,81 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
           h6: TextStyle(fontSize: fontSize),
         ),
       ),
+    );
+  }
+  
+  Widget _buildSplitMode(String content, double fontSize) {
+    return Column(
+      children: [
+        // Snippet palette
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1.0,
+              ),
+            ),
+          ),
+          child: SnippetPalette(
+            textController: _textController,
+            focusNode: _editorFocusNode,
+          ),
+        ),
+        // Split view with editor and preview
+        Expanded(
+          child: Row(
+            children: [
+              // Editor side
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _editorFocusNode,
+                    maxLines: null,
+                    expands: true,
+                    style: TextStyle(fontSize: fontSize, fontFamily: 'monospace'),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Escribe tu markdown aquí...',
+                    ),
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                ),
+              ),
+              // Vertical divider
+              Container(
+                width: 1.0,
+                color: Theme.of(context).dividerColor,
+              ),
+              // Preview side
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Markdown(
+                    data: content,
+                    selectable: true,
+                    softLineBreak: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(fontSize: fontSize),
+                      h1: TextStyle(fontSize: fontSize * 2.0),
+                      h2: TextStyle(fontSize: fontSize * 1.75),
+                      h3: TextStyle(fontSize: fontSize * 1.5),
+                      h4: TextStyle(fontSize: fontSize * 1.25),
+                      h5: TextStyle(fontSize: fontSize * 1.1),
+                      h6: TextStyle(fontSize: fontSize),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
