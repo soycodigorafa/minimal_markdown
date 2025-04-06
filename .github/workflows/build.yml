@@ -3,6 +3,8 @@ name: Build and Release
 on:
   push:
     branches: [ master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ master ]
 
@@ -115,3 +117,64 @@ jobs:
           name: linux-build
           path: build/linux/x64/release/bundle
           if-no-files-found: warn
+
+  # Create GitHub Release when a tag is pushed
+  create-release:
+    needs: [build-macos, build-windows, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get tag message for changelog
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' "${GITHUB_REF#refs/tags/}")
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          # Package macOS app
+          if [ -d "artifacts/macos-build" ]; then
+            cd artifacts/macos-build
+            zip -r ../../release-assets/markdown_editor-mac-${{ steps.get_version.outputs.VERSION }}.zip .
+            cd ../..
+          fi
+          # Package Windows app
+          if [ -d "artifacts/windows-build" ]; then
+            cd artifacts/windows-build
+            zip -r ../../release-assets/markdown_editor-windows-${{ steps.get_version.outputs.VERSION }}.zip .
+            cd ../..
+          fi
+          # Package Linux app
+          if [ -d "artifacts/linux-build" ]; then
+            cd artifacts/linux-build
+            tar -czvf ../../release-assets/markdown_editor-linux-${{ steps.get_version.outputs.VERSION }}.tar.gz .
+            cd ../..
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Markdown Editor v${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
+          files: release-assets/*
+          draft: false
+          prerelease: false
