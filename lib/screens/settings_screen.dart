@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown_editor/services/theme_service.dart';
+import 'package:markdown_editor/services/startup_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -30,6 +31,12 @@ class SettingsScreen extends ConsumerWidget {
           _buildSectionTitle(context, 'Tipografía'),
           _buildFontFamilySelector(context, ref, themeSettings.fontFamily),
           _buildFontSizeSelector(context, ref, themeSettings.fontSize),
+          
+          const Divider(),
+          
+          // Sección de inicio
+          _buildSectionTitle(context, 'Inicio'),
+          _buildStartupOptions(context, ref),
           
           const Divider(),
           
@@ -175,6 +182,57 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (EditorFontSize? value) {
               if (value != null) {
                 ref.read(themeNotifierProvider.notifier).setFontSize(value);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStartupOptions(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(startupModeProvider);
+    
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Al iniciar la aplicación',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          RadioListTile<StartupMode>(
+            title: const Text('Crear un nuevo documento'),
+            value: StartupMode.createNew,
+            groupValue: currentMode,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(startupModeProvider.notifier).setStartupMode(value);
+              }
+            },
+          ),
+          RadioListTile<StartupMode>(
+            title: const Text('Abrir el documento más reciente'),
+            value: StartupMode.openRecent,
+            groupValue: currentMode,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(startupModeProvider.notifier).setStartupMode(value);
+              }
+            },
+          ),
+          RadioListTile<StartupMode>(
+            title: const Text('Mostrar la pantalla de inicio'),
+            value: StartupMode.showHome,
+            groupValue: currentMode,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(startupModeProvider.notifier).setStartupMode(value);
               }
             },
           ),

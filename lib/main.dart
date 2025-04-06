@@ -5,6 +5,8 @@ import 'package:window_manager/window_manager.dart';
 // Screens
 import 'screens/editor_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/startup_handler.dart';
 // Services
 import 'services/theme_service.dart';
 
@@ -62,8 +64,13 @@ class MyApp extends ConsumerWidget {
         fontFamily: themeSettings.fontFamily,
       ),
       themeMode: themeSettings.themeMode,
-      home: const EditorScreen(),
-      routes: {'/settings': (context) => const SettingsScreen()},
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const StartupHandler(),
+        '/home': (context) => const HomeScreen(),
+        '/editor': (context) => const EditorScreen(),
+        '/settings': (context) => const SettingsScreen(),
+      },
     );
   }
 }

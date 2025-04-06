@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown_editor/viewmodels/document_viewmodel.dart';
 import 'package:markdown_editor/services/file_service.dart';
 import 'package:markdown_editor/services/theme_service.dart';
+import 'package:markdown_editor/services/recent_files_service.dart';
 import 'package:markdown_editor/widgets/snippet_palette.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -22,7 +23,7 @@ class ViewModeNotifier extends StateNotifier<ViewMode> {
   ViewModeNotifier() : super(ViewMode.editor);
 
   void setMode(ViewMode mode) => state = mode;
-  
+
   void togglePreview() {
     if (state == ViewMode.editor) {
       state = ViewMode.preview;
@@ -30,7 +31,7 @@ class ViewModeNotifier extends StateNotifier<ViewMode> {
       state = ViewMode.editor;
     }
   }
-  
+
   void toggleSplit() {
     if (state == ViewMode.split) {
       state = ViewMode.editor;
@@ -135,6 +136,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       // Obtener la ruta del archivo seleccionado
       final path = await fileService.getLastOpenedPath();
       if (path != null) {
+        // Add to recent files
+        ref.read(recentFilesProvider.notifier).addRecentFile(path);
+        
         ref.read(documentProvider.notifier)
           ..setFilePath(path)
           ..updateContent(content)
@@ -154,12 +158,17 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     );
 
     if (savedPath != null) {
+      // Add to recent files
+      ref.read(recentFilesProvider.notifier).addRecentFile(savedPath);
+      
       ref.read(documentProvider.notifier)
         ..setFilePath(savedPath)
         ..markAsSaved();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Archivo guardado correctamente')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Archivo guardado correctamente')),
+        );
+      }
     }
   }
 
@@ -202,24 +211,25 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     final viewMode = ref.watch(viewModeProvider);
     final fontSize = ref.watch(editorFontSizeProvider);
 
-    // Definir los atajos de teclado
+    // Definir los atajos de teclado basados en la plataforma
+    final modifierKey =
+        Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control;
     final shortcuts = <ShortcutActivator, Intent>{
-      LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyS,
-      ): VoidCallbackIntent(() {}),
-      LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyO,
-      ): VoidCallbackIntent(() {}),
-      LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyN,
-      ): VoidCallbackIntent(() {}),
-      LogicalKeySet(
-        LogicalKeyboardKey.control,
-        LogicalKeyboardKey.keyP,
-      ): VoidCallbackIntent(() {}),
+      LogicalKeySet(modifierKey, LogicalKeyboardKey.keyS): VoidCallbackIntent(
+        () {},
+      ),
+      LogicalKeySet(modifierKey, LogicalKeyboardKey.keyO): VoidCallbackIntent(
+        () {},
+      ),
+      LogicalKeySet(modifierKey, LogicalKeyboardKey.keyN): VoidCallbackIntent(
+        () {},
+      ),
+      LogicalKeySet(modifierKey, LogicalKeyboardKey.keyP): VoidCallbackIntent(
+        () {},
+      ),
+      LogicalKeySet(modifierKey, LogicalKeyboardKey.keyD): VoidCallbackIntent(
+        () {},
+      ),
     };
 
     // Acciones para los atajos
@@ -279,34 +289,55 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
           },
           child: Scaffold(
             appBar: AppBar(
+              surfaceTintColor: Colors.white,
+              shadowColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              elevation: 0,
+              scrolledUnderElevation: 0,
               title: Text(
                 document.fileName + (document.isModified ? " *" : ""),
               ),
               actions: [
                 IconButton(
+                  icon: const Icon(Icons.home),
+                  tooltip: 'Inicio',
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                ),
+                IconButton(
                   icon: const Icon(Icons.file_open),
-                  tooltip: 'Abrir (Ctrl+O)',
+                  tooltip: 'Abrir (${Platform.isMacOS ? "⌘" : "Ctrl"}+O)',
                   onPressed: _openFile,
                 ),
                 IconButton(
                   icon: const Icon(Icons.save),
-                  tooltip: 'Guardar (Ctrl+S)',
+                  tooltip: 'Guardar (${Platform.isMacOS ? "⌘" : "Ctrl"}+S)',
                   onPressed: _saveFile,
                 ),
                 IconButton(
                   icon: const Icon(Icons.add),
-                  tooltip: 'Nuevo documento (Ctrl+N)',
+                  tooltip:
+                      'Nuevo documento (${Platform.isMacOS ? "⌘" : "Ctrl"}+N)',
                   onPressed: _newDocument,
                 ),
                 IconButton(
-                  icon: Icon(viewMode == ViewMode.preview ? Icons.edit : Icons.preview),
-                  tooltip: 'Cambiar modo (Ctrl+P)',
-                  onPressed: () => ref.read(viewModeProvider.notifier).togglePreview(),
+                  icon: Icon(
+                    viewMode == ViewMode.preview ? Icons.edit : Icons.preview,
+                  ),
+                  tooltip:
+                      'Cambiar modo (${Platform.isMacOS ? "⌘" : "Ctrl"}+P)',
+                  onPressed:
+                      () => ref.read(viewModeProvider.notifier).togglePreview(),
                 ),
                 IconButton(
-                  icon: Icon(viewMode == ViewMode.split ? Icons.fullscreen : Icons.splitscreen),
-                  tooltip: 'Vista dividida (Ctrl+D)',
-                  onPressed: () => ref.read(viewModeProvider.notifier).toggleSplit(),
+                  icon: Icon(
+                    viewMode == ViewMode.split
+                        ? Icons.fullscreen
+                        : Icons.splitscreen,
+                  ),
+                  tooltip:
+                      'Vista dividida (${Platform.isMacOS ? "⌘" : "Ctrl"}+D)',
+                  onPressed:
+                      () => ref.read(viewModeProvider.notifier).toggleSplit(),
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings),
@@ -393,7 +424,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       ),
     );
   }
-  
+
   Widget _buildSplitMode(String content, double fontSize) {
     return Column(
       children: [
@@ -427,7 +458,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                     focusNode: _editorFocusNode,
                     maxLines: null,
                     expands: true,
-                    style: TextStyle(fontSize: fontSize, fontFamily: 'monospace'),
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontFamily: 'monospace',
+                    ),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Escribe tu markdown aquí...',
@@ -438,10 +472,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                 ),
               ),
               // Vertical divider
-              Container(
-                width: 1.0,
-                color: Theme.of(context).dividerColor,
-              ),
+              Container(width: 1.0, color: Theme.of(context).dividerColor),
               // Preview side
               Expanded(
                 child: Container(
