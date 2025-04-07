@@ -7,8 +7,8 @@ import 'package:path/path.dart' as path;
 
 final recentFilesProvider =
     StateNotifierProvider<RecentFilesNotifier, List<RecentFile>>(
-  (ref) => RecentFilesNotifier(),
-);
+      (ref) => RecentFilesNotifier(),
+    );
 
 class RecentFilesNotifier extends StateNotifier<List<RecentFile>> {
   RecentFilesNotifier() : super([]) {
@@ -22,14 +22,15 @@ class RecentFilesNotifier extends StateNotifier<List<RecentFile>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final recentFilesJson = prefs.getStringList(_prefsKey) ?? [];
-      
-      final recentFiles = recentFilesJson
-          .map((fileJson) => RecentFile.fromJson(fileJson))
-          .toList();
-      
+
+      final recentFiles =
+          recentFilesJson
+              .map((fileJson) => RecentFile.fromJson(fileJson))
+              .toList();
+
       // Sort by most recently opened
       recentFiles.sort((a, b) => b.lastOpened.compareTo(a.lastOpened));
-      
+
       state = recentFiles;
     } catch (e) {
       debugPrint('Error loading recent files: $e');
@@ -55,7 +56,7 @@ class RecentFilesNotifier extends StateNotifier<List<RecentFile>> {
 
     // Check if file already exists in recent files
     final existingIndex = state.indexWhere((file) => file.path == filePath);
-    
+
     if (existingIndex >= 0) {
       // Update existing entry with new timestamp
       final updatedList = List<RecentFile>.from(state);
@@ -70,17 +71,17 @@ class RecentFilesNotifier extends StateNotifier<List<RecentFile>> {
         name: fileName,
         lastOpened: now,
       );
-      
+
       final updatedList = [newFile, ...state];
-      
+
       // Limit to max number of recent files
       if (updatedList.length > _maxRecentFiles) {
         updatedList.removeLast();
       }
-      
+
       state = updatedList;
     }
-    
+
     await _saveRecentFiles();
   }
 
