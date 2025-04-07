@@ -150,23 +150,46 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          # Package macOS app
+          # Package macOS app - preserve app bundle structure
           if [ -d "artifacts/macos-build" ]; then
-            cd artifacts/macos-build
-            zip -r ../../release-assets/markdown_editor-mac-${{ steps.get_version.outputs.VERSION }}.zip .
-            cd ../..
+            # Create a temporary directory to hold the app
+            mkdir -p temp_macos
+            # Copy the app bundle to the temp directory, preserving the structure
+            cp -R artifacts/macos-build/markdown_editor.app temp_macos/
+            # Create the zip from outside the app directory to preserve the .app structure
+            cd temp_macos
+            zip -r ../release-assets/markdown_editor-mac-${{ steps.get_version.outputs.VERSION }}.zip .
+            cd ..
+            # Clean up
+            rm -rf temp_macos
           fi
-          # Package Windows app
+          # Package Windows app - create a clean structure
           if [ -d "artifacts/windows-build" ]; then
-            cd artifacts/windows-build
-            zip -r ../../release-assets/markdown_editor-windows-${{ steps.get_version.outputs.VERSION }}.zip .
-            cd ../..
+            mkdir -p temp_windows/markdown_editor
+            cp -R artifacts/windows-build/* temp_windows/markdown_editor/
+            # Create a simple README file
+            echo "Markdown Editor for Windows" > temp_windows/README.txt
+            echo "Version ${{ steps.get_version.outputs.VERSION }}" >> temp_windows/README.txt
+            echo "\nTo run the application, open the markdown_editor folder and run markdown_editor.exe" >> temp_windows/README.txt
+            cd temp_windows
+            zip -r ../release-assets/markdown_editor-windows-${{ steps.get_version.outputs.VERSION }}.zip .
+            cd ..
+            rm -rf temp_windows
           fi
-          # Package Linux app
+          # Package Linux app - create a clean structure
           if [ -d "artifacts/linux-build" ]; then
-            cd artifacts/linux-build
-            tar -czvf ../../release-assets/markdown_editor-linux-${{ steps.get_version.outputs.VERSION }}.tar.gz .
-            cd ../..
+            mkdir -p temp_linux/markdown_editor
+            cp -R artifacts/linux-build/* temp_linux/markdown_editor/
+            # Create a simple README file
+            echo "Markdown Editor for Linux" > temp_linux/README.txt
+            echo "Version ${{ steps.get_version.outputs.VERSION }}" >> temp_linux/README.txt
+            echo "\nTo run the application:" >> temp_linux/README.txt
+            echo "1. Open a terminal in the markdown_editor directory" >> temp_linux/README.txt
+            echo "2. Run ./markdown_editor" >> temp_linux/README.txt
+            cd temp_linux
+            tar -czvf ../release-assets/markdown_editor-linux-${{ steps.get_version.outputs.VERSION }}.tar.gz .
+            cd ..
+            rm -rf temp_linux
           fi
 
       - name: Create GitHub Release
