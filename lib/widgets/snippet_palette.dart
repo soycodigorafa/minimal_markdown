@@ -7,15 +7,15 @@ class SnippetPalette extends ConsumerWidget {
   final FocusNode focusNode;
 
   const SnippetPalette({
-    Key? key,
+    super.key,
     required this.textController,
     required this.focusNode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final snippetService = ref.watch(snippetServiceProvider);
-    
+
     return Wrap(
       spacing: 4,
       children: [
@@ -24,19 +24,23 @@ class SnippetPalette extends ConsumerWidget {
           context,
           tooltip: 'Headings',
           icon: Icons.title,
-          itemBuilder: (context) => [
-            for (int i = 1; i <= 6; i++)
-              PopupMenuItem(
-                value: i,
-                child: Text('H$i', style: TextStyle(fontWeight: _getHeaderWeight(i))),
-              ),
-          ],
+          itemBuilder:
+              (context) => [
+                for (int i = 1; i <= 6; i++)
+                  PopupMenuItem(
+                    value: i,
+                    child: Text(
+                      'H$i',
+                      style: TextStyle(fontWeight: _getHeaderWeight(i)),
+                    ),
+                  ),
+              ],
           onSelected: (int level) {
             snippetService.insertHeader(textController, level);
             snippetService.refocusEditor(focusNode);
           },
         ),
-        
+
         // Text formatting
         _buildIconButton(
           context,
@@ -56,7 +60,7 @@ class SnippetPalette extends ConsumerWidget {
             snippetService.refocusEditor(focusNode);
           },
         ),
-        
+
         // Code
         _buildIconButton(
           context,
@@ -76,7 +80,7 @@ class SnippetPalette extends ConsumerWidget {
             snippetService.refocusEditor(focusNode);
           },
         ),
-        
+
         // Lists
         _buildIconButton(
           context,
@@ -105,7 +109,7 @@ class SnippetPalette extends ConsumerWidget {
             snippetService.refocusEditor(focusNode);
           },
         ),
-        
+
         // Other elements
         _buildIconButton(
           context,
@@ -187,7 +191,7 @@ class SnippetPalette extends ConsumerWidget {
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
-  
+
   /// Returns the appropriate FontWeight for a header level
   FontWeight _getHeaderWeight(int level) {
     switch (level) {

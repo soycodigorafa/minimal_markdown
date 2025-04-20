@@ -1,5 +1,4 @@
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// Utility class for generating Markdown element snippets
 class MarkdownSnippets {
@@ -81,13 +80,13 @@ class MarkdownSnippets {
     }
 
     final result = <String>[];
-    
+
     // Add headers
     result.add('| ${headers.join(' | ')} |');
-    
+
     // Add separator
     result.add('| ${headers.map((_) => '---').join(' | ')} |');
-    
+
     // Add rows
     for (final row in rows) {
       if (row.length != headers.length) {
@@ -95,7 +94,7 @@ class MarkdownSnippets {
       }
       result.add('| ${row.join(' | ')} |');
     }
-    
+
     return result.join('\n');
   }
 
@@ -104,28 +103,26 @@ class MarkdownSnippets {
   static void insertSnippet(TextEditingController controller, String snippet) {
     final selection = controller.selection;
     final text = controller.text;
-    
+
     // Find placeholder text to select after insertion
-    final placeholderMatch = RegExp(r'(link text|code here|Heading|alt text|Item 1|Task 1|Header 1|Row 1, Col 1)').firstMatch(snippet);
+    final placeholderMatch = RegExp(
+      r'(link text|code here|Heading|alt text|Item 1|Task 1|Header 1|Row 1, Col 1)',
+    ).firstMatch(snippet);
     int selectionStart = selection.baseOffset + snippet.length;
     int selectionEnd = selectionStart;
-    
+
     if (placeholderMatch != null) {
       // Calculate positions to select the placeholder text
       final placeholder = placeholderMatch.group(0)!;
       final placeholderStart = snippet.indexOf(placeholder);
       final placeholderEnd = placeholderStart + placeholder.length;
-      
+
       selectionStart = selection.baseOffset + placeholderStart;
       selectionEnd = selection.baseOffset + placeholderEnd;
     }
-    
-    final newText = text.replaceRange(
-      selection.start,
-      selection.end,
-      snippet,
-    );
-    
+
+    final newText = text.replaceRange(selection.start, selection.end, snippet);
+
     controller.value = TextEditingValue(
       text: newText,
       selection: TextSelection(
@@ -151,13 +148,14 @@ class MarkdownSnippets {
         selection.end,
         '$prefix$placeholder$suffix',
       );
-      
+
       // Position cursor to select the placeholder text for easy replacement
       controller.value = TextEditingValue(
         text: newText,
         selection: TextSelection(
           baseOffset: selection.baseOffset + prefix.length,
-          extentOffset: selection.baseOffset + prefix.length + placeholder.length,
+          extentOffset:
+              selection.baseOffset + prefix.length + placeholder.length,
         ),
       );
     } else {
@@ -166,13 +164,13 @@ class MarkdownSnippets {
         selection.start,
         selection.end,
       );
-      
+
       final newText = controller.text.replaceRange(
         selection.start,
         selection.end,
         '$prefix$selectedText$suffix',
       );
-      
+
       // Maintain the selection of the wrapped text
       controller.value = TextEditingValue(
         text: newText,
@@ -183,7 +181,7 @@ class MarkdownSnippets {
       );
     }
   }
-  
+
   /// Returns an appropriate placeholder based on the wrapper type
   static String _getPlaceholderForWrapper(String prefix) {
     switch (prefix) {

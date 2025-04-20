@@ -12,7 +12,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recentFiles = ref.watch(recentFilesProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Markdown Editor'),
@@ -49,18 +49,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-
-
   Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Acciones rápidas',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
@@ -119,9 +114,9 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildRecentFiles(
-    BuildContext context, 
-    WidgetRef ref, 
-    List<RecentFile> recentFiles
+    BuildContext context,
+    WidgetRef ref,
+    List<RecentFile> recentFiles,
   ) {
     if (recentFiles.isEmpty) {
       return const Column(
@@ -129,10 +124,7 @@ class HomeScreen extends ConsumerWidget {
         children: [
           Text(
             'Archivos recientes',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16),
           Center(
@@ -140,10 +132,7 @@ class HomeScreen extends ConsumerWidget {
               padding: EdgeInsets.all(32.0),
               child: Text(
                 'No hay archivos recientes',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ),
           ),
@@ -160,10 +149,7 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const Text(
                 'Archivos recientes',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.delete_outline),
@@ -181,7 +167,7 @@ class HomeScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final file = recentFiles[index];
                 final fileExists = File(file.path).existsSync();
-                
+
                 return ListTile(
                   leading: Icon(
                     Icons.description,
@@ -189,9 +175,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   title: Text(
                     file.name,
-                    style: TextStyle(
-                      color: fileExists ? null : Colors.grey,
-                    ),
+                    style: TextStyle(color: fileExists ? null : Colors.grey),
                   ),
                   subtitle: Row(
                     children: [
@@ -200,27 +184,36 @@ class HomeScreen extends ConsumerWidget {
                           file.path,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: fileExists ? Colors.grey : Colors.grey.withOpacity(0.5),
+                            color:
+                                fileExists
+                                    ? Colors.grey
+                                    : Colors.grey.withValues(alpha: 0.5),
                           ),
                         ),
                       ),
                       Text(
                         '${file.lastOpened.day}/${file.lastOpened.month}/${file.lastOpened.year} ${file.lastOpened.hour}:${file.lastOpened.minute.toString().padLeft(2, '0')}',
                         style: TextStyle(
-                          color: fileExists ? Colors.grey : Colors.grey.withOpacity(0.5),
+                          color:
+                              fileExists
+                                  ? Colors.grey
+                                  : Colors.grey.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
                   ),
                   enabled: fileExists,
-                  onTap: fileExists
-                      ? () => _openRecentFile(context, ref, file.path)
-                      : null,
+                  onTap:
+                      fileExists
+                          ? () => _openRecentFile(context, ref, file.path)
+                          : null,
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
                     tooltip: 'Eliminar del historial',
                     onPressed: () {
-                      ref.read(recentFilesProvider.notifier).removeRecentFile(file.path);
+                      ref
+                          .read(recentFilesProvider.notifier)
+                          .removeRecentFile(file.path);
                     },
                   ),
                 );
@@ -246,13 +239,13 @@ class HomeScreen extends ConsumerWidget {
       if (path != null) {
         // Add to recent files
         ref.read(recentFilesProvider.notifier).addRecentFile(path);
-        
+
         // Update document
         ref.read(documentProvider.notifier)
           ..setFilePath(path)
           ..updateContent(content)
           ..markAsSaved();
-          
+
         // Navigate to editor
         if (context.mounted) {
           Navigator.pushReplacementNamed(context, '/editor');
@@ -262,23 +255,23 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Future<void> _openRecentFile(
-    BuildContext context, 
-    WidgetRef ref, 
-    String filePath
+    BuildContext context,
+    WidgetRef ref,
+    String filePath,
   ) async {
     final file = File(filePath);
     if (await file.exists()) {
       final content = await file.readAsString();
-      
+
       // Add to recent files (updates timestamp)
       ref.read(recentFilesProvider.notifier).addRecentFile(filePath);
-      
+
       // Update document
       ref.read(documentProvider.notifier)
         ..setFilePath(filePath)
         ..updateContent(content)
         ..markAsSaved();
-        
+
       // Navigate to editor
       if (context.mounted) {
         Navigator.pushReplacementNamed(context, '/editor');
@@ -288,9 +281,7 @@ class HomeScreen extends ConsumerWidget {
       ref.read(recentFilesProvider.notifier).removeRecentFile(filePath);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('El archivo ya no existe'),
-          ),
+          const SnackBar(content: Text('El archivo ya no existe')),
         );
       }
     }

@@ -9,7 +9,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeSettings = ref.watch(themeNotifierProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuración'),
@@ -24,27 +24,29 @@ class SettingsScreen extends ConsumerWidget {
           // Sección de tema
           _buildSectionTitle(context, 'Apariencia'),
           _buildThemeSelector(context, ref, themeSettings.themeMode),
-          
+
           const Divider(),
-          
+
           // Sección de tipografía
           _buildSectionTitle(context, 'Tipografía'),
           _buildFontFamilySelector(context, ref, themeSettings.fontFamily),
           _buildFontSizeSelector(context, ref, themeSettings.fontSize),
-          
+
           const Divider(),
-          
+
           // Sección de inicio
           _buildSectionTitle(context, 'Inicio'),
           _buildStartupOptions(context, ref),
-          
+
           const Divider(),
-          
+
           // Sección "Acerca de"
           _buildSectionTitle(context, 'Acerca de'),
           ListTile(
             title: const Text('Markdown Editor'),
-            subtitle: const Text('Un editor minimalista de markdown para escritorio'),
+            subtitle: const Text(
+              'Un editor minimalista de markdown para escritorio',
+            ),
             trailing: const Text('v1.0.0'),
           ),
         ],
@@ -55,17 +57,20 @@ class SettingsScreen extends ConsumerWidget {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge,
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.titleLarge),
     );
   }
 
-  Widget _buildThemeSelector(BuildContext context, WidgetRef ref, ThemeMode currentTheme) {
+  Widget _buildThemeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode currentTheme,
+  ) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         children: [
           RadioListTile<ThemeMode>(
@@ -103,7 +108,11 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFontFamilySelector(BuildContext context, WidgetRef ref, String currentFont) {
+  Widget _buildFontFamilySelector(
+    BuildContext context,
+    WidgetRef ref,
+    String currentFont,
+  ) {
     final fonts = [
       'Roboto Mono',
       'Consolas',
@@ -111,10 +120,12 @@ class SettingsScreen extends ConsumerWidget {
       'Source Code Pro',
       'Fira Code',
     ];
-    
+
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -141,10 +152,16 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFontSizeSelector(BuildContext context, WidgetRef ref, EditorFontSize currentSize) {
+  Widget _buildFontSizeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    EditorFontSize currentSize,
+  ) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -189,13 +206,15 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildStartupOptions(BuildContext context, WidgetRef ref) {
     final currentMode = ref.watch(startupModeProvider);
-    
+
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
