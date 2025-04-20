@@ -1,0 +1,16 @@
+package_rename_config:
+  linux:
+    app_name: "Just Type"
+    package_name: "dev.codigorafa.justtype"
+    exe_name: "just_type_app"
+
+  macos:
+    app_name: "Just Type"
+    package_name: "dev.codigorafa.justtype"
+    copyright_notice: "Copyright ©️ 2025 CodigoRafa. All rights reserved"
+
+  windows:
+    app_name: "Just Type"
+    organization: "Codigorafa"
+    copyright_notice: "Copyright ©️ 2025 CodigoRafa. All rights reserved"
+    exe_name: "just_type_app"

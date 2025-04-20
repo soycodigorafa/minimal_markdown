@@ -4,7 +4,7 @@ project(markdown_editor LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "markdown_editor")
+set(BINARY_NAME "just_type_app")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
