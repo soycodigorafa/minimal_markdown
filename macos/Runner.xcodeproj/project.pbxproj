@@ -578,7 +578,7 @@
 				DEVELOPMENT_TEAM = 83FAPGV8D5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Minimal Markdown";
+				INFOPLIST_KEY_CFBundleDisplayName = "Just Type";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -717,7 +717,7 @@
 				DEVELOPMENT_TEAM = 83FAPGV8D5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Minimal Markdown";
+				INFOPLIST_KEY_CFBundleDisplayName = "Just Type";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -744,7 +744,7 @@
 				DEVELOPMENT_TEAM = 83FAPGV8D5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Minimal Markdown";
+				INFOPLIST_KEY_CFBundleDisplayName = "Just Type";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

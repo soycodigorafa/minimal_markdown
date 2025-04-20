@@ -57,7 +57,7 @@ flutter_launcher_icons:
     image_path: "assets/images/logo_just_type.png"
   macos: 
     generate: true
-    image_path: "assets/images/logo_just_type.png"
+    image_path: "assets/images/app_logo_macos.png"
 
 
 
